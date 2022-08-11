@@ -1,0 +1,36 @@
+%
+% Copyright (c) 2022 Japanese TeX Development Community
+%
+\epTeXinputencoding utf8
+
+\input{regression-test}
+\documentclass{minimal}
+\RequirePackage[enable-debug]{expl3}
+\ExplSyntaxOn
+\debug_on:n { check-declarations , deprecation , log-functions }
+\ExplSyntaxOff
+
+\RequirePackage{plexpl3}
+
+\begin{document}
+
+\START
+\ExplSyntaxOn
+
+\TEST { default }
+  {
+    \str_set_convert:Nnnn \l_tmpa_tl { ABC~äëïöü~αβγ~あいうえお~日本語~☀☁☂☃ }
+      { default } { utf16/hex }
+    \str_if_eq:onTF { \l_tmpa_tl } { FEFF004100420043002000E400EB00EF00F600FC002003B103B203B300203042304430463048304A002065E5672C8A9E00202600260126022603 }
+      { \TRUE } { \ERROR }
+  }
+
+\TEST { to~default }
+  {
+    \str_set_convert:Nnnn \l_tmpa_tl { FEFF004100420043002000E400EB00EF00F600FC002003B103B203B300203042304430463048304A002065E5672C8A9E00202600260126022603 }
+      { utf16/hex } { default }
+    \str_if_eq:onTF { \l_tmpa_tl } { ABC~äëïöü~αβγ~あいうえお~日本語~☀☁☂☃ }
+      { \TRUE } { \ERROR }
+  }
+
+\END

@@ -1,0 +1,33 @@
+\iffalse meta-comment
+
+File plexpl3.ins
+
+Copyright (c) 2022 Japanese TeX Development Community
+
+This file is part of the pLaTeX2e system (community edition).
+-------------------------------------------------------------
+
+\fi
+
+\let\jobname\relax
+\input docstrip %
+\askforoverwritefalse
+
+\preamble
+
+Copyright (c) 2020-2022 Japanese TeX Development Community
+
+This file is part of the pLaTeX2e system (community edition).
+-------------------------------------------------------------
+
+\endpreamble
+% stop docstrip adding \endinput
+\postamble
+\endpostamble
+
+\keepsilent
+
+\generate{\file{plexpl3.sty}{\from{plexpl3.dtx}{package}}}
+\generate{\file{plexpl3.ltx}{\from{plexpl3.dtx}{code}}}
+
+\endbatchfile

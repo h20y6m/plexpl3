@@ -1,0 +1,71 @@
+%
+% Copyright (c) 2022 Japanese TeX Development Community
+%
+\epTeXinputencoding utf8
+
+\input{regression-test}
+\documentclass{minimal}
+\RequirePackage[enable-debug]{expl3}
+\ExplSyntaxOn
+\debug_on:n { check-declarations , deprecation , log-functions }
+\ExplSyntaxOff
+
+\RequirePackage{plexpl3}
+
+\begin{document}
+
+\START
+\ExplSyntaxOn
+
+\TESTEXP { tl_to_str }
+  {
+    " \tl_to_str:n { ABCxyz+? } "
+    \NEWLINE
+    " \tl_to_str:n { £§±¶½ÅÆÇÊÏÐÑÒ×ØÙÝÞß } "
+    \NEWLINE
+    " \tl_to_str:n { ãæçéìðô÷øûþÿ } "
+    \NEWLINE
+    " \tl_to_str:n { ĂĘŁŊŐąěğŋşůż } "
+    \NEWLINE
+    " \tl_to_str:n { ΑΒΓΩαβγω } "
+    \NEWLINE
+    " \tl_to_str:n { АБВЉЇЯабвґџя } "
+    \NEWLINE
+    " \tl_to_str:n { ‰ } "
+  }
+
+\TESTEXP { uppercase }
+  {
+    " \str_uppercase:n { ABCxyz+? } "
+    \NEWLINE
+    " \str_uppercase:n { £§±¶½ÅÆÇÊÏÐÑÒ×ØÙÝÞß } "
+    \NEWLINE
+    " \str_uppercase:n { ãæçéìðô÷øûþÿ } "
+    \NEWLINE
+    " \str_uppercase:n { ĂĘŁŊŐąěğŋşůż } "
+    \NEWLINE
+    " \str_uppercase:n { ΑΒΓΩαβγω } "
+    \NEWLINE
+    " \str_uppercase:n { АБВЉЇЯабвґџя } "
+    \NEWLINE
+    " \str_uppercase:n { ‰ } "
+  }
+
+\TESTEXP { lowercase }
+  {
+    " \str_lowercase:n { ABCxyz+? } "
+    \NEWLINE
+    " \str_lowercase:n { £§±¶½ÅÆÇÊÏÐÑÒ×ØÙÝÞß } "
+    \NEWLINE
+    " \str_lowercase:n { ãæçéìðô÷øûþÿ } "
+    \NEWLINE
+    " \str_lowercase:n { ĂĘŁŊŐąěğŋşůż } "
+    \NEWLINE
+    " \str_lowercase:n { ΑΒΓΩαβγω } "
+    \NEWLINE
+    " \str_lowercase:n { АБВЉЇЯабвґџя } "
+    \NEWLINE
+    " \str_lowercase:n { ‰ } "
+  }
+
+\END

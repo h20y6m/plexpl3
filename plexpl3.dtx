@@ -1,0 +1,483 @@
+% \iffalse meta-comment
+%% File: plexpl3.dtx
+%
+%  Copyright (c) 2020-2022 Japanese TeX Development Community
+%
+%  This file is part of the pLaTeX2e system (community edition).
+%  -------------------------------------------------------------
+%
+% \fi
+%
+%
+% \iffalse
+% \changes{v1.0}{2020/09/28}{初版：p\TeX{}の条件文を定義}
+% \fi
+%
+% \iffalse
+%<*driver>
+\NeedsTeXFormat{pLaTeX2e}
+\ProvidesFile{plexpl3.dtx}[2020/09/28 v1.0 expl3 additions]
+\RequirePackage{plautopatch}
+\documentclass[dvipdfmx,a4paper]{jltxdoc}
+\GetFileInfo{plexpl3.dtx}
+\author{Japanese \TeX\ Development Community}
+\title{The \textsf{plexpl3} package}
+\date{作成日：\filedate}
+\begin{document}
+  \newcommand\Lpack[1]{\textsf{#1}}
+  \maketitle
+  \DocInput{\filename}
+\end{document}
+%</driver>
+% \fi
+%
+% \LaTeX3 (expl3)で用意されていない「p\TeX{}系列の独自機能」を
+% expl3の文法で使えるようにするコードです。
+% p\LaTeXe~2020-10-01で新設しました。
+%
+% \setcounter{StandardModuleDepth}{1}
+% \StopEventually{}
+%
+% \section{コード}
+%
+% パッケージとして宣言します。
+% これで、p\LaTeXe~2020-04-12以前でも
+% \file{plexpl3.sty}と\file{plexpl3.ltx}だけ
+% 入手すれば同等の機能が使えます。
+%    \begin{macrocode}
+%<*package>
+\NeedsTeXFormat{pLaTeX2e}
+\RequirePackage{expl3}
+\ProvidesExplPackage{plexpl3}{2020-09-28}{1.0}
+  {pTeX/upTeX-specific additions to expl3}
+%</package>
+%    \end{macrocode}
+%
+% \LaTeXe~2020-02-02以降では\file{expl3}が標準で
+% フォーマットに読み込まれています。この場合は
+% \file{plexpl3}の機能をフォーマットに取り込みます。
+%    \begin{macrocode}
+%<plcore>\ifdefined\ExplSyntaxOn %--- expl3 available BEGIN
+%<plcore>\ExplSyntaxOn
+%<*plcore|package>
+\input plexpl3.ltx
+%</plcore|package>
+%<plcore>\ExplSyntaxOff
+%<plcore>\fi                     %--- expl3 available END
+%    \end{macrocode}
+%
+% \file{platexrelease}のroll-forwardにも登録します。
+%    \begin{macrocode}
+%<platexrelease>\plIncludeInRelease{2020/10/01}%
+%<platexrelease>                   {plexpl3}{Pre-load plexpl3}%
+%<platexrelease>\RequirePackage{plexpl3}
+%<platexrelease>\plEndIncludeInRelease
+%<platexrelease>\plIncludeInRelease{0000/00/00}%
+%<platexrelease>                   {plexpl3}{Not loading plexpl3}%
+%<platexrelease>% Nothing to do
+%<platexrelease>\plEndIncludeInRelease
+%    \end{macrocode}
+%
+% 以下のコードは\file{plexpl3.ltx}に書き出します。
+% フォーマットとパッケージからの重複読み込みは禁止します。
+%    \begin{macrocode}
+%<*code>
+\cs_if_exist:NT \__platex_expl_loaded:
+  {
+    \GenericInfo{}
+      {Skipping:~ plexpl3~ code~ already~ part~ of~ the~ format}%
+    \endinput
+  }
+\cs_new:Npn \__platex_expl_loaded: {  }
+%    \end{macrocode}
+%
+% \section{p\TeX{}系列の条件文}
+%
+% p\TeX{}系列の条件文をexpl3の文法にします。
+% \changes{v1.0}{2020/09/28}{初版：p\TeX{}の条件文を定義}
+%    \begin{macrocode}
+%% additions to l3box.dtx: writing directions (pTeX/upTeX-specific)
+\cs_set_eq:NN \platex_direction_yoko: \tex_yoko:D
+\cs_set_eq:NN \platex_direction_tate: \tex_tate:D
+\cs_set_eq:NN \platex_direction_dtou: \tex_dtou:D
+%
+\prg_new_conditional:Npnn \platex_if_direction_yoko: { p, T, F, TF }
+  { \tex_ifydir:D \prg_return_true: \else: \prg_return_false: \fi: }
+\prg_new_conditional:Npnn \platex_if_direction_tate: { p, T, F, TF }
+  { \tex_iftdir:D \prg_return_true: \else: \prg_return_false: \fi: }
+\prg_new_conditional:Npnn \platex_if_direction_dtou: { p, T, F, TF }
+  { \tex_ifddir:D \prg_return_true: \else: \prg_return_false: \fi: }
+%
+\prg_new_conditional:Npnn \platex_if_box_yoko:N #1 { p, T, F, TF }
+  { \tex_ifybox:D #1 \prg_return_true: \else: \prg_return_false: \fi: }
+\prg_new_conditional:Npnn \platex_if_box_tate:N #1 { p, T, F, TF }
+  { \tex_iftbox:D #1 \prg_return_true: \else: \prg_return_false: \fi: }
+\prg_new_conditional:Npnn \platex_if_box_dtou:N #1 { p, T, F, TF }
+  { \tex_ifdbox:D #1 \prg_return_true: \else: \prg_return_false: \fi: }
+%    \end{macrocode}
+%
+% \section{expl3の和文文字トークン対応}
+%
+% \url{https://gist.github.com/zr-tex8r/248ff347172ce16d005897656687a901}
+%    \begin{macrocode}
+%---------------------------------------
+%% \token_if_jachar:N <token>
+% Tests if <token> is a jachar token or not.
+\bool_lazy_or:nnTF
+  { \sys_if_engine_ptex_p: }
+  { \sys_if_engine_uptex_p: }
+  {
+    \use:x
+      {
+        \prg_new_conditional:Npnn \exp_not:N \token_if_jachar:N ##1
+          { p , T ,  F , TF }
+          {
+            % A token is a jachar token if and only if
+            % its meaning string starts with "kanji ".
+            \exp_not:N \str_if_eq:eeTF
+              {
+                \exp_not:N \exp_after:wN
+                \exp_not:N  \__token_delimit_by_kanji:w
+                \exp_not:N \token_to_meaning:N ##1
+                ? \tl_to_str:n { kanji } ~ \s__token_stop
+              }
+              { }
+              { \exp_not:N \prg_return_true: }
+              { \exp_not:N \prg_return_false: }
+          }
+        \cs_new:Npn \exp_not:N \__token_delimit_by_kanji:w ##1
+          \tl_to_str:n { kanji } ~ ##2 \s__token_stop
+          {##1}
+      }
+  }
+  {
+    \prg_new_conditional:Npnn \token_if_jachar:N #1
+      { p , T ,  F , TF }
+      { \prg_return_false: }
+  }
+
+%---------------------------------------
+%% Fix for the case-change funcrtions in l3text.
+\bool_lazy_or:nnT
+  { \sys_if_engine_ptex_p: }
+  { \sys_if_engine_uptex_p: }
+  {
+    \cs_gset_eq:NN \__text_change_case_char_jachar:nnnN
+      \__text_change_case_char_auxii:nnnN
+  }
+\bool_lazy_or:nnF
+  { \sys_if_engine_luatex_p: }
+  { \sys_if_engine_xetex_p: }
+  {
+    % The current implementation for pdftex should be employed
+    % for all non-Unicode engines.
+    \cs_gset:Npn \__text_change_case_char_auxii:nnnN #1#2#3#4
+      {
+        \int_compare:nNnTF { `#4 } < { "F0 }
+          { \__text_change_case_char_UTFviii:nnnNNN }
+          { \__text_change_case_char_UTFviii:nnnNNNN }
+            {#1} {#2} {#3} #4
+      }
+  }
+\bool_lazy_or:nnT
+  { \sys_if_engine_ptex_p: }
+  { \sys_if_engine_uptex_p: }
+  {
+    \cs_gset:Npn \__text_change_case_char:nnnN #1#2#3#4
+      {
+        \int_compare:nNnTF { `#4 } > { "80 } % why not "7F?
+          {
+            % Check if the given character token is a jachar.
+            \token_if_jachar:NTF #4
+              { \__text_change_case_char_jachar:nnnN }
+              {
+                \int_compare:nNnTF { `#4 } < { "E0 }
+                  { \__text_change_case_char_UTFviii:nnnNN }
+                  { \__text_change_case_char_auxii:nnnN }
+              }
+          }
+          { \__text_change_case_char_auxi:nnnN }
+            {#1} {#2} {#3} #4
+       }
+  }
+
+%---------------------------------------
+%% Fix for the case-change funcrtions in l3str.
+\bool_lazy_or:nnF
+  { \sys_if_engine_luatex_p: }
+  { \sys_if_engine_xetex_p: }
+  {
+    % The current implementation for pdftex should be employed
+    % for all non-Unicode engines.
+    \cs_gset:Npn \__str_change_case_char_UTFviii:nNNN #1#2#3#4
+      { \__str_change_case_char_UTFviii:nn {#1} {#2#3#4} }
+    \cs_gset:Npn \__str_change_case_char_UTFviii:nNNNN #1#2#3#4#5
+      { \__str_change_case_char_UTFviii:nn {#1} {#2#3#4#5} }
+  }
+\bool_lazy_or:nnT
+  { \sys_if_engine_ptex_p: }
+  { \sys_if_engine_uptex_p: }
+  {
+    \cs_gset:Npn \__str_change_case_char:nN #1#2
+      {
+        \__str_if_recursion_tail_stop_do:Nn #2
+          { \__str_change_case_end:wn }
+        \int_compare:nNnTF { `#2 } > { "80 }
+          {
+            % Check if the given character token is a jachar.
+            \token_if_jachar:NTF #2
+              { \__str_change_case_char_jachar:nN }
+              {
+                \int_compare:nNnTF { `#2 } < { "E0 }
+                  { \__str_change_case_char_UTFviii:nNN }
+                  {
+                    \int_compare:nNnTF { `#2 } < { "F0 }
+                      { \__str_change_case_char_UTFviii:nNNN }
+                      { \__str_change_case_char_UTFviii:nNNNN }
+                  }
+              }
+            {#1} #2
+          }
+          {
+            \__str_change_case_output:fw
+              { \use:c { char_str_ #1 case:N } #2 }
+            \__str_change_case_loop:nw {#1}
+          }
+      }
+    \cs_new:Npn \__str_change_case_char_jachar:nN #1#2
+      {
+        \__str_change_case_output:nw {#2}
+        \__str_change_case_loop:nw {#1}
+      }
+  }
+%    \end{macrocode}
+%
+% \url{https://gist.github.com/h20y6m/6449d1d5d29a71620d19f29f881a0549}
+%    \begin{macrocode}
+\cs_new:Npn \__str_encode_if_extended_char_p:n #1 { \c_false_bool }
+\cs_new:Npn \__str_encode_extended_char:n #1 { }
+
+\cs_gset:Npn \__str_encode_utf_viii_char:n #1
+  {
+    \if_predicate:w \__str_encode_if_extended_char_p:n {#1}
+      \__str_encode_extended_char:n {#1}
+    \else:
+      \__str_encode_utf_viii_loop:wwnnw #1 ; - 1 + 0 * ;
+        { 128 } {       0 }
+        {  32 } {     192 }
+        {  16 } {     224 }
+        {   8 } {     240 }
+      \s__str_stop
+    \fi:
+  }
+
+\cs_new:Npn \__str_decode_if_extended_char_p:N #1 { \c_false_bool }
+\cs_new:Npn \__str_decode_extended_char:N #1 { }
+
+\cs_gset:Npn \__str_decode_utf_viii_start:N #1
+  {
+    #1
+    \if_predicate:w \__str_decode_if_extended_char_p:N #1
+      \s__str
+      \__str_decode_extended_char:N #1
+    \else:
+      \if_int_compare:w `#1 < "C0 \exp_stop_f:
+        \s__str
+        \if_int_compare:w `#1 < "80 \exp_stop_f:
+          \int_value:w `#1
+        \else:
+          \flag_raise:n { str_extra }
+          \flag_raise:n { str_error }
+          \int_use:N \c__str_replacement_char_int
+        \fi:
+      \else:
+        \exp_after:wN \__str_decode_utf_viii_continuation:wwN
+        \int_value:w \int_eval:n { `#1 - "C0 } \exp_after:wN
+      \fi:
+      \exp_after:wN % ???
+    \fi:
+    \s__str
+    \__str_use_none_delimit_by_s_stop:w {"80} {"800} {"10000} {"110000} \s__str_stop
+    \__str_decode_utf_viii_start:N
+  }
+
+\cs_new_protected:Npn \__ptex_tmp:w { }
+
+% (upTeX only) declare kanji token which has specific kcatcode.
+\sys_if_engine_uptex:T
+  {
+    \group_begin:
+      \cs_set:Npn \__ptex_tmp:w #1#2
+        {
+          \exp_after:wN \cs_new_eq:NN \exp_after:wN #1
+            \tex_Ucharcat:D
+              \int_eval:n { \tex_jis:D "2121 } ~
+              \int_eval:n {#2} \scan_stop:
+        }
+      \__ptex_tmp:w \c_kcatcode_kanji_token  { 16 }
+      \__ptex_tmp:w \c_kcatcode_kana_token   { 17 }
+      \__ptex_tmp:w \c_kcatcode_symbol_token { 18 }
+      \__ptex_tmp:w \c_kcatcode_hangul_token { 19 }
+    \group_end:
+  }
+
+% (upTeX only) get kcatcode of token.
+\sys_if_engine_uptex:T
+  {
+    \cs_new:Npn \__ptex_char_kcatcode:N #1
+      {
+        \if_catcode:w \exp_not:N #1 \c_kcatcode_kanji_token
+          16
+        \else:
+          \if_catcode:w \exp_not:N #1 \c_kcatcode_kana_token
+            17
+          \else:
+            \if_catcode:w \exp_not:N #1 \c_kcatcode_symbol_token
+              18
+            \else:
+              \if_catcode:w \exp_not:N #1 \c_kcatcode_hangul_token
+                19
+              \else:
+                15
+              \fi:
+            \fi:
+          \fi:
+        \fi:
+      }
+  }
+
+
+% define ptex+utf8 encoding.
+
+% ptex+utf8 encode function.
+\cs_new_protected:cpn { __str_convert_encode_ptex+utf8: }
+  {
+    \group_begin:
+      \cs_set_eq:NN \__str_encode_if_extended_char_p:n \__str_encode_if_kanji_char_p:n
+      \cs_set_eq:NN \__str_encode_extended_char:n \__str_encode_kanji_char:n
+      \use:c { __str_convert_encode_utf8: }
+    \group_end:
+  }
+
+% Tests whether the Unicode code point #1 is Japanese character
+\int_compare:nNnTF { \tex_jis:D "2121 } = { "3000 }
+  {
+    % upTeX with unicode
+    \prg_new_conditional:Npnn \__str_encode_if_kanji_char:n #1 { p }
+      {
+        % NOTE:
+        %   \kcatcode0--\kcatcode127 may not be 15,
+        %   but ASCII (0--127) never be Japanese character.
+        \if_int_compare:w #1 < "80 \exp_stop_f:
+          \prg_return_false:
+        \else:
+          \if_int_compare:w \tex_kcatcode:D #1 = 15 \exp_stop_f:
+            \prg_return_false:
+          \else:
+            \prg_return_true:
+          \fi:
+        \fi:
+      }
+  }
+  {
+    % pTeX or upTeX with euc/sjis
+    \prg_new_conditional:Npnn \__str_encode_if_kanji_char:n #1 { p }
+      {
+        % If specified Unicode code point cannot convert to internal Kanji code,
+        % \ucs returns -1.
+        \if_int_compare:w \tex_ucs:D #1 < 0 \exp_stop_f:
+          \prg_return_false:
+        \else:
+          \if_int_compare:w \tex_kcatcode:D \tex_ucs:D #1 = 15 \exp_stop_f: % upTeX only. pTeX always false.
+            \prg_return_false:
+          \else:
+            \prg_return_true:
+          \fi:
+        \fi:
+      }
+  }
+
+% Generate Japanese character token which has Unicode code point #1.
+\int_compare:nNnTF { \tex_jis:D "2121 } = { "3000 }
+  {
+    % upTeX with unicode
+    \cs_new:Npn \__str_encode_kanji_char:n #1
+      {
+        % \Uchar always generates Latin character token for character
+        % code 128--255, but Japanese character token are needed,
+        % so use \Ucharcat instead.
+        \if_int_compare:w \tex_kcatcode:D #1 > 15 \exp_stop_f:
+          \tex_Ucharcat:D #1 \exp_stop_f: \tex_kcatcode:D #1 \exp_stop_f:
+        \else:
+          \tex_Ucharcat:D #1 \exp_stop_f: 18 \exp_stop_f:
+        \fi:
+      }
+  }
+  {
+    % pTeX or upTeX with euc/sjis
+    \cs_new:Npn \__str_encode_kanji_char:n #1
+      { \tex_Uchar:D \tex_ucs:D #1 \exp_stop_f: \exp_stop_f: }
+  }
+
+% ptex+utf8 decode function.
+\cs_new_protected:cpn { __str_convert_decode_ptex+utf8: }
+  {
+    \group_begin:
+      \cs_set_eq:NN \__str_decode_if_extended_char_p:N \__str_decode_if_kanji_char_p:N
+      \cs_set_eq:NN \__str_decode_extended_char:N \__str_decode_kanji_char:N
+      \use:c { __str_convert_decode_utf8: }
+    \group_end:
+  }
+
+% Tests whether the token #1 is Japanese character.
+\int_compare:nNnTF { \tex_jis:D "2121 } = { "3000 }
+  {
+    % upTeX with unicode
+    \prg_new_conditional:Npnn \__str_decode_if_kanji_char:N #1 { p }
+      {
+        \if_int_compare:w \__ptex_char_kcatcode:N #1 > 15 \exp_stop_f:
+          \prg_return_true:
+        \else:
+          \prg_return_false:
+        \fi:
+      }
+  }
+  {
+    % pTeX or upTeX with euc/sjis
+    \prg_new_conditional:Npnn \__str_decode_if_kanji_char:N #1 { p }
+      {
+        \if_int_compare:w `#1 < "100 \exp_stop_f:
+          \prg_return_false:
+        \else:
+          \prg_return_true:
+        \fi:
+      }
+  }
+
+% Convert Japanese character #1 to Unicode code point.
+\int_compare:nNnTF { \tex_jis:D "2121 } = { "3000 }
+  {
+    % upTeX with unicode
+    \cs_new:Npn \__str_decode_kanji_char:N #1
+      { \int_value:w `#1 }
+  }
+  {
+    % pTeX or upTeX with euc/sjis
+    \cs_new:Npn \__str_decode_kanji_char:N #1
+      { \tex_toucs:D `#1 }
+  }
+
+% alternative encoding name
+\prop_gput:Nnn \g__str_alias_prop { ptex    } { ptex+utf8 }
+% set default encoding to ptex+utf8
+\prop_gput:Nnn \g__str_alias_prop { default } { ptex+utf8 }
+%    \end{macrocode}
+%
+% 以上です。
+%    \begin{macrocode}
+%</code>
+%    \end{macrocode}
+%
+% \Finale
+%
+\endinput
