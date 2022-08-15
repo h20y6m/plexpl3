@@ -118,11 +118,15 @@
 %
 % \section{expl3の和文文字トークン対応}
 %
+% \subsection{大文字小文字変換関数の修正}
 % \url{https://gist.github.com/zr-tex8r/248ff347172ce16d005897656687a901}
+%
+% \begin{macro}{\token_if_jachar:NTF}
+%   \meta{token} \marg{true code} \marg{false code}
+%
+% Tests if \meta{token} is a jachar token or not.
+%
 %    \begin{macrocode}
-%---------------------------------------
-%% \token_if_jachar:N <token>
-% Tests if <token> is a jachar token or not.
 \bool_lazy_or:nnTF
   { \sys_if_engine_ptex_p: }
   { \sys_if_engine_uptex_p: }
@@ -132,8 +136,10 @@
         \prg_new_conditional:Npnn \exp_not:N \token_if_jachar:N ##1
           { p , T ,  F , TF }
           {
-            % A token is a jachar token if and only if
-            % its meaning string starts with "kanji ".
+%    \end{macrocode}
+% A token is a jachar token if and only if
+% its meaning string starts with ``\verb*|kanji |''.
+%    \begin{macrocode}
             \exp_not:N \str_if_eq:eeTF
               {
                 \exp_not:N \exp_after:wN
@@ -155,9 +161,12 @@
       { p , T ,  F , TF }
       { \prg_return_false: }
   }
-
-%---------------------------------------
-%% Fix for the case-change funcrtions in l3text.
+%    \end{macrocode}
+% \end{macro}
+%
+% Fix for the case-change funcrtions in \file{l3text}.
+%
+%    \begin{macrocode}
 \bool_lazy_or:nnT
   { \sys_if_engine_ptex_p: }
   { \sys_if_engine_uptex_p: }
@@ -169,8 +178,10 @@
   { \sys_if_engine_luatex_p: }
   { \sys_if_engine_xetex_p: }
   {
-    % The current implementation for pdftex should be employed
-    % for all non-Unicode engines.
+%    \end{macrocode}
+% The current implementation for pdftex should be employed
+% for all non-Unicode engines.
+%    \begin{macrocode}
     \cs_gset:Npn \__text_change_case_char_auxii:nnnN #1#2#3#4
       {
         \int_compare:nNnTF { `#4 } < { "F0 }
@@ -187,7 +198,9 @@
       {
         \int_compare:nNnTF { `#4 } > { "80 } % why not "7F?
           {
-            % Check if the given character token is a jachar.
+%    \end{macrocode}
+% Check if the given character token is a jachar.
+%    \begin{macrocode}
             \token_if_jachar:NTF #4
               { \__text_change_case_char_jachar:nnnN }
               {
@@ -200,15 +213,19 @@
             {#1} {#2} {#3} #4
        }
   }
-
-%---------------------------------------
-%% Fix for the case-change funcrtions in l3str.
+%    \end{macrocode}
+%
+% Fix for the case-change funcrtions in \file{l3str}.
+%
+%    \begin{macrocode}
 \bool_lazy_or:nnF
   { \sys_if_engine_luatex_p: }
   { \sys_if_engine_xetex_p: }
   {
-    % The current implementation for pdftex should be employed
-    % for all non-Unicode engines.
+%    \end{macrocode}
+% The current implementation for pdftex should be employed
+% for all non-Unicode engines.
+%    \begin{macrocode}
     \cs_gset:Npn \__str_change_case_char_UTFviii:nNNN #1#2#3#4
       { \__str_change_case_char_UTFviii:nn {#1} {#2#3#4} }
     \cs_gset:Npn \__str_change_case_char_UTFviii:nNNNN #1#2#3#4#5
@@ -224,7 +241,9 @@
           { \__str_change_case_end:wn }
         \int_compare:nNnTF { `#2 } > { "80 }
           {
-            % Check if the given character token is a jachar.
+%    \end{macrocode}
+% Check if the given character token is a jachar.
+%    \begin{macrocode}
             \token_if_jachar:NTF #2
               { \__str_change_case_char_jachar:nN }
               {
@@ -252,11 +271,20 @@
   }
 %    \end{macrocode}
 %
+% \subsection{文字コード変換関数の修正}
 % \url{https://gist.github.com/h20y6m/6449d1d5d29a71620d19f29f881a0549}
+%
+% \begin{macro}{\__str_encode_if_extended_char_p:n}
+% \begin{macro}{\__str_encode_extended_char:n}
 %    \begin{macrocode}
 \cs_new:Npn \__str_encode_if_extended_char_p:n #1 { \c_false_bool }
 \cs_new:Npn \__str_encode_extended_char:n #1 { }
-
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% Patch for UTF-8 encoding function in \file{l3str-convert}.
+%    \begin{macrocode}
 \cs_gset:Npn \__str_encode_utf_viii_char:n #1
   {
     \if_predicate:w \__str_encode_if_extended_char_p:n {#1}
@@ -270,10 +298,19 @@
       \s__str_stop
     \fi:
   }
-
+%    \end{macrocode}
+%
+% \begin{macro}{\__str_decode_if_extended_char_p:N}
+% \begin{macro}{\__str_decode_extended_char:N}
+%    \begin{macrocode}
 \cs_new:Npn \__str_decode_if_extended_char_p:N #1 { \c_false_bool }
 \cs_new:Npn \__str_decode_extended_char:N #1 { }
-
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% Patch for UTF-8 decoding function in \file{l3str-convert}.
+%    \begin{macrocode}
 \cs_gset:Npn \__str_decode_utf_viii_start:N #1
   {
     #1
@@ -300,10 +337,14 @@
     \__str_use_none_delimit_by_s_stop:w {"80} {"800} {"10000} {"110000} \s__str_stop
     \__str_decode_utf_viii_start:N
   }
-
+%    \end{macrocode}
+%
+%    \begin{macrocode}
 \cs_new_protected:Npn \__ptex_tmp:w { }
-
-% (upTeX only) declare kanji token which has specific kcatcode.
+%    \end{macrocode}
+%
+% (up\TeX{} only) declare kanji token which has specific kcatcode.
+%    \begin{macrocode}
 \sys_if_engine_uptex:T
   {
     \group_begin:
@@ -320,8 +361,10 @@
       \__ptex_tmp:w \c_kcatcode_hangul_token { 19 }
     \group_end:
   }
-
-% (upTeX only) get kcatcode of token.
+%    \end{macrocode}
+%
+% (up\TeX{} only) get kcatcode of token.
+%    \begin{macrocode}
 \sys_if_engine_uptex:T
   {
     \cs_new:Npn \__ptex_char_kcatcode:N #1
@@ -345,29 +388,38 @@
         \fi:
       }
   }
-
-
+%    \end{macrocode}
+%
 % define ptex+utf8 encoding.
-
+%
 % ptex+utf8 encode function.
+%    \begin{macrocode}
 \cs_new_protected:cpn { __str_convert_encode_ptex+utf8: }
   {
     \group_begin:
-      \cs_set_eq:NN \__str_encode_if_extended_char_p:n \__str_encode_if_kanji_char_p:n
-      \cs_set_eq:NN \__str_encode_extended_char:n \__str_encode_kanji_char:n
+      \cs_set_eq:NN \__str_encode_if_extended_char_p:n
+        \__str_encode_if_kanji_char_p:n
+      \cs_set_eq:NN \__str_encode_extended_char:n
+        \__str_encode_kanji_char:n
       \use:c { __str_convert_encode_utf8: }
     \group_end:
   }
-
-% Tests whether the Unicode code point #1 is Japanese character
+%    \end{macrocode}
+%
+% Tests whether the Unicode code point \#1 is Japanese character
+%    \begin{macrocode}
 \int_compare:nNnTF { \tex_jis:D "2121 } = { "3000 }
   {
-    % upTeX with unicode
+%    \end{macrocode}
+% up\TeX{} with unicode
+%    \begin{macrocode}
     \prg_new_conditional:Npnn \__str_encode_if_kanji_char:n #1 { p }
       {
-        % NOTE:
-        %   \kcatcode0--\kcatcode127 may not be 15,
-        %   but ASCII (0--127) never be Japanese character.
+%    \end{macrocode}
+% NOTE:
+%   \verb|\kcatcode0|--\verb|\kcatcode127| may not be 15,
+%   but ASCII ($0$--$127$) never be Japanese character.
+%    \begin{macrocode}
         \if_int_compare:w #1 < "80 \exp_stop_f:
           \prg_return_false:
         \else:
@@ -380,15 +432,23 @@
       }
   }
   {
-    % pTeX or upTeX with euc/sjis
+%    \end{macrocode}
+% p\TeX{} or up\TeX{} with euc/sjis
+%    \begin{macrocode}
     \prg_new_conditional:Npnn \__str_encode_if_kanji_char:n #1 { p }
       {
-        % If specified Unicode code point cannot convert to internal Kanji code,
-        % \ucs returns -1.
+%    \end{macrocode}
+% If specified Unicode code point cannot convert to internal Kanji code,
+% \cs{ucs} returns $-1$.
+%    \begin{macrocode}
         \if_int_compare:w \tex_ucs:D #1 < 0 \exp_stop_f:
           \prg_return_false:
         \else:
-          \if_int_compare:w \tex_kcatcode:D \tex_ucs:D #1 = 15 \exp_stop_f: % upTeX only. pTeX always false.
+%    \end{macrocode}
+% up\TeX{} only. p\TeX{} always false.
+%    \begin{macrocode}
+          \if_int_compare:w
+              \tex_kcatcode:D \tex_ucs:D #1 = 15 \exp_stop_f:
             \prg_return_false:
           \else:
             \prg_return_true:
@@ -396,46 +456,64 @@
         \fi:
       }
   }
-
-% Generate Japanese character token which has Unicode code point #1.
+%    \end{macrocode}
+%
+% Generate Japanese character token which has Unicode code point \#1.
+%    \begin{macrocode}
 \int_compare:nNnTF { \tex_jis:D "2121 } = { "3000 }
   {
-    % upTeX with unicode
+%    \end{macrocode}
+% up\TeX{} with unicode
+%    \begin{macrocode}
     \cs_new:Npn \__str_encode_kanji_char:n #1
       {
-        % \Uchar always generates Latin character token for character
-        % code 128--255, but Japanese character token are needed,
-        % so use \Ucharcat instead.
+%    \end{macrocode}
+% \cs{Uchar} always generates Latin character token for character
+% code $128$--$255$, but Japanese character token are needed,
+% so use \cs{Ucharcat} instead.
+%    \begin{macrocode}
         \if_int_compare:w \tex_kcatcode:D #1 > 15 \exp_stop_f:
-          \tex_Ucharcat:D #1 \exp_stop_f: \tex_kcatcode:D #1 \exp_stop_f:
+          \tex_Ucharcat:D
+            #1 \exp_stop_f: \tex_kcatcode:D #1 \exp_stop_f:
         \else:
           \tex_Ucharcat:D #1 \exp_stop_f: 18 \exp_stop_f:
         \fi:
       }
   }
   {
-    % pTeX or upTeX with euc/sjis
+%    \end{macrocode}
+% p\TeX{} or up\TeX{} with euc/sjis
+%    \begin{macrocode}
     \cs_new:Npn \__str_encode_kanji_char:n #1
       { \tex_Uchar:D \tex_ucs:D #1 \exp_stop_f: \exp_stop_f: }
   }
-
+%    \end{macrocode}
+%
 % ptex+utf8 decode function.
+%    \begin{macrocode}
 \cs_new_protected:cpn { __str_convert_decode_ptex+utf8: }
   {
     \group_begin:
-      \cs_set_eq:NN \__str_decode_if_extended_char_p:N \__str_decode_if_kanji_char_p:N
-      \cs_set_eq:NN \__str_decode_extended_char:N \__str_decode_kanji_char:N
+      \cs_set_eq:NN \__str_decode_if_extended_char_p:N
+        \__str_decode_if_kanji_char_p:N
+      \cs_set_eq:NN \__str_decode_extended_char:N
+        \__str_decode_kanji_char:N
       \use:c { __str_convert_decode_utf8: }
     \group_end:
   }
-
-% Tests whether the token #1 is Japanese character.
+%    \end{macrocode}
+%
+% Tests whether the token \#1 is Japanese character.
+%    \begin{macrocode}
 \int_compare:nNnTF { \tex_jis:D "2121 } = { "3000 }
   {
-    % upTeX with unicode
+%    \end{macrocode}
+% up\TeX{} with unicode
+%    \begin{macrocode}
     \prg_new_conditional:Npnn \__str_decode_if_kanji_char:N #1 { p }
       {
-        \if_int_compare:w \__ptex_char_kcatcode:N #1 > 15 \exp_stop_f:
+        \if_int_compare:w
+            \__ptex_char_kcatcode:N #1 > 15 \exp_stop_f:
           \prg_return_true:
         \else:
           \prg_return_false:
@@ -443,7 +521,9 @@
       }
   }
   {
-    % pTeX or upTeX with euc/sjis
+%    \end{macrocode}
+% p\TeX{} or up\TeX{} with euc/sjis
+%    \begin{macrocode}
     \prg_new_conditional:Npnn \__str_decode_if_kanji_char:N #1 { p }
       {
         \if_int_compare:w `#1 < "100 \exp_stop_f:
@@ -453,23 +533,32 @@
         \fi:
       }
   }
-
-% Convert Japanese character #1 to Unicode code point.
+%    \end{macrocode}
+% Convert Japanese character \#1 to Unicode code point.
+%    \begin{macrocode}
 \int_compare:nNnTF { \tex_jis:D "2121 } = { "3000 }
   {
-    % upTeX with unicode
+%    \end{macrocode}
+% up\TeX{} with unicode
+%    \begin{macrocode}
     \cs_new:Npn \__str_decode_kanji_char:N #1
       { \int_value:w `#1 }
   }
   {
-    % pTeX or upTeX with euc/sjis
+%    \end{macrocode}
+% p\TeX{} or up\TeX{} with euc/sjis
+%    \begin{macrocode}
     \cs_new:Npn \__str_decode_kanji_char:N #1
       { \tex_toucs:D `#1 }
   }
-
+%    \end{macrocode}
+%
 % alternative encoding name
+%    \begin{macrocode}
 \prop_gput:Nnn \g__str_alias_prop { ptex    } { ptex+utf8 }
+%    \end{macrocode}
 % set default encoding to ptex+utf8
+%    \begin{macrocode}
 \prop_gput:Nnn \g__str_alias_prop { default } { ptex+utf8 }
 %    \end{macrocode}
 %
