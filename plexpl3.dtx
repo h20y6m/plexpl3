@@ -562,6 +562,50 @@
 \prop_gput:Nnn \g__str_alias_prop { default } { ptex+utf8 }
 %    \end{macrocode}
 %
+% \subsection{正規表現関数の修正}
+%
+% Fix for replacement functions in \file{l3regrex}.
+%    \begin{macrocode}
+\cs_gset_protected:Npn \__regex_replacement_normal_aux:N #1
+  {
+    \token_if_eq_charcode:NNTF #1 \c_space_token
+      { \__regex_replacement_c_S:w }
+      {
+%    \end{macrocode}
+% Check if the given character token is a jachar.
+%    \begin{macrocode}
+        \token_if_jachar:NTF #1 
+          { \__regex_replacement_jachar:NN }
+          {
+            \exp_after:wN \exp_after:wN
+            \if_case:w \tex_catcode:D `#1 \exp_stop_f:
+                 \__regex_replacement_c_O:w
+            \or: \__regex_replacement_c_B:w
+            \or: \__regex_replacement_c_E:w
+            \or: \__regex_replacement_c_M:w
+            \or: \__regex_replacement_c_T:w
+            \or: \__regex_replacement_c_O:w
+            \or: \__regex_replacement_c_P:w
+            \or: \__regex_replacement_c_U:w
+            \or: \__regex_replacement_c_D:w
+            \or: \__regex_replacement_c_O:w
+            \or: \__regex_replacement_c_S:w
+            \or: \__regex_replacement_c_L:w
+            \or: \__regex_replacement_c_O:w
+            \or: \__regex_replacement_c_A:w
+            \else: \__regex_replacement_c_O:w
+            \fi:
+          }
+      }
+    ? #1
+  }
+%    \end{macrocode}
+% 和文文字はとりあえずそのまま出力します。
+%    \begin{macrocode}
+\cs_new_protected:Npn \__regex_replacement_jachar:NN #1#2
+  { \__regex_replacement_put:n {#2} }
+%    \end{macrocode}
+%
 % 以上です。
 %    \begin{macrocode}
 %</code>

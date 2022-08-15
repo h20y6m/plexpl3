@@ -1,0 +1,50 @@
+%
+% Copyright (c) 2022 Japanese TeX Development Community
+%
+\epTeXinputencoding utf8
+
+\input{regression-test}
+\documentclass{minimal}
+\RequirePackage[enable-debug]{expl3}
+\ExplSyntaxOn
+\debug_on:n { check-declarations , deprecation , log-functions }
+\ExplSyntaxOff
+
+\RequirePackage{plexpl3}
+
+\begin{document}
+
+\START
+\ExplSyntaxOn
+
+\OMIT
+  \cs_set:Npn \test:nnnn #1#2#3#4
+    {
+      \tl_set:Nn \l_tmpa_tl {#1}
+      \regex_replace_once:nnN {#2} {#3} \l_tmpa_tl
+      \tl_set:Nn \l_tmpb_tl {#4}
+      \tl_if_eq:NNTF \l_tmpa_tl \l_tmpb_tl { \TRUE } { \ERROR }
+    }
+\TIMO
+
+\TEST { replace~al~to~al }
+  {
+    \test:nnnn { I am a cat. } { cat } { dog } { I am a dog. }
+  }
+
+\TEST { replace~ja~to~al }
+  {
+    \test:nnnn { 吾輩は猫である。 } { 猫 } { cat } { 吾輩はcatである。 }
+  }
+
+\TEST { replace~al~to~ja }
+  {
+    \test:nnnn { I am a cat. } { cat } { 猫 } { I am a 猫. }
+  }
+
+\TEST { replace~ja~to~ja }
+  {
+    \test:nnnn { 吾輩は猫である。 } { 猫 } { 犬 } { 吾輩は犬である。 }
+  }
+
+\END
