@@ -1,0 +1,38 @@
+%
+% Copyright (c) 2022 Japanese TeX Development Community
+%
+\epTeXinputencoding utf8
+
+\input{regression-test}
+\documentclass{minimal}
+\RequirePackage[enable-debug]{expl3}
+\ExplSyntaxOn
+\debug_on:n { check-declarations , deprecation , log-functions }
+\ExplSyntaxOff
+
+\RequirePackage{plexpl3}
+
+\begin{document}
+
+\START
+\ExplSyntaxOn
+
+\cs_new:Npn \test_map:n #1 { [#1] }
+
+\TESTEXP { text_map_function }
+  {
+    \text_map_function:nN
+      { ABC~äëïöü~αβγ~あいうえお~か゚き゚く゚け゚こ゚~葛󠄀城市~葛󠄁飾区~☀☁☂☃~⛄👨‍👩‍👧‍👦💔 }
+      \test_map:n
+  }
+
+\TEST { text_map_inline }
+  {
+    \text_map_inline:nn
+      { ABC~äëïöü~αβγ~あいうえお~か゚き゚く゚け゚こ゚~葛󠄀城市~葛󠄁飾区~☀☁☂☃~⛄👨‍👩‍👧‍👦💔 }
+      {
+        \TYPE { [#1] }
+      }
+  }
+
+\END

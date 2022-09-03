@@ -606,6 +606,88 @@
   { \__regex_replacement_put:n {#2} }
 %    \end{macrocode}
 %
+% \subsection{コードポイント関数の修正}
+%
+% Fix for codepoint functions in \file{l3text}.
+%    \begin{macrocode}
+%<@@=text>
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_gset:Npn \@@_codepoint_process:nN #1#2
+  {
+%    \end{macrocode}
+% Check if the given character token is a jachar.
+% One jachar token is one codepoint.
+%    \begin{macrocode}
+    \token_if_jachar:NTF #2
+      { \use:n }
+      {
+        \int_compare:nNnTF { `#2 } > { "80 }
+          {
+            \int_compare:nNnTF { `#2 } < { "E0 }
+              { \@@_codepoint_process:nNN }
+              {
+                  \int_compare:nNnTF { `#2 } < { "F0 }
+                    { \@@_codepoint_process:nNNN }
+                    { \@@_codepoint_process:nNNNN }
+              }
+          }
+      }
+      { \use:n }
+        {#1} #2
+  }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_gset:Npn \@@_codepoint_compare:N #1
+  {
+%    \end{macrocode}
+% Check if the given character token is a jachar.
+%    \begin{macrocode}
+    \token_if_jachar:NTF #1
+      { \@@_codepoint_compare_jachar:N }
+      {
+        \if_int_compare:w `#1 > "80 \exp_stop_f:
+          \if_int_compare:w `#1 < "E0 \exp_stop_f:
+            \exp_after:wN \exp_after:wN \exp_after:wN
+              \@@_codepoint_compare:NN
+          \else:
+            \if_int_compare:w `#1 < "F0 \exp_stop_f:
+              \exp_after:wN \exp_after:wN \exp_after:wN
+              \exp_after:wN \exp_after:wN \exp_after:wN
+              \exp_after:wN \@@_codepoint_compare:NNN
+            \else:
+              \exp_after:wN \exp_after:wN \exp_after:wN
+              \exp_after:wN \exp_after:wN \exp_after:wN
+              \exp_after:wN \@@_codepoint_compare:NNNN
+            \fi:
+          \fi:
+        \else:
+          \exp_after:wN \@@_codepoint_compare_aux:N
+        \fi:
+      }
+      #1
+  }
+%    \end{macrocode}
+%    \begin{macrocode}
+\int_compare:nNnTF { \tex_jis:D "2121 } = { "3000 }
+  {
+%    \end{macrocode}
+% up\TeX{} with unicode.
+%    \begin{macrocode}
+    \cs_new:Npn \@@_codepoint_compare_jachar:N #1 { `#1 }
+  }
+  {
+%    \end{macrocode}
+% p\TeX{} or up\TeX{} with euc/sjis.
+%    \begin{macrocode}
+    \cs_new:Npn \@@_codepoint_compare_jachar:N #1
+      { \tex_toucs:D `#1 \exp_stop_f: }
+  }
+%    \end{macrocode}
+%    \begin{macrocode}
+%<@@=>
+%    \end{macrocode}
+%
 % 以上です。
 %    \begin{macrocode}
 %</code>
