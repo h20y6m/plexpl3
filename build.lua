@@ -14,7 +14,7 @@ typesetexe  = "platex"
 typesetopts = " -interaction=nonstopmode -no-guess-input-enc -kanji=utf8 "
 
 unpackexe  = "ptex"
-unpackopts = " -interaction=nonstopmode -no-guess-input-enc -kanji=utf8 "
+unpackopts = " -interaction=batchmode -no-guess-input-enc -kanji=utf8 "
 
 -- Do not break non-ascii chars in log file
 asciiengines = {}
@@ -52,7 +52,14 @@ local function mkfmts(engines,dir)
     if engine:match("u?ptex") then
       engine = "e" .. engine
     end
-    runcmd(engine .. " -etex -ini " .. ininame, dir, {})
+    print("Building format for " .. engine)
+    local errorlevel = runcmd(engine .. " -etex -ini "
+      .. " -no-guess-input-enc -kanji=utf8 "
+      .. ininame .. " > " .. os_null, dir, {})
+    if errorlevel ~= 0 then
+      print("Failed building format for " .. engine)
+      return errorlevel
+    end
   end
   return 0
 end
