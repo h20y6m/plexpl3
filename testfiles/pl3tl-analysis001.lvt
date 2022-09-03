@@ -1,0 +1,29 @@
+%
+% Copyright (c) 2022 Japanese TeX Development Community
+%
+\epTeXinputencoding utf8
+
+\input{regression-test}
+\documentclass{minimal}
+\RequirePackage[enable-debug]{expl3}
+\ExplSyntaxOn
+\debug_on:n { check-declarations , deprecation , log-functions }
+\ExplSyntaxOff
+
+\RequirePackage{plexpl3}
+
+\begin{document}
+
+\START
+\ExplSyntaxOn
+
+\TEST { tl_analysis_map_inline }
+  {
+    \tl_analysis_map_inline:nn
+      { ABC~äëïöü~αβγ~あいうえお~日本語~☀☁☂☃ }
+      {
+        \TYPE{ [#1] [#2] [#3] }
+      }
+  }
+
+\END
