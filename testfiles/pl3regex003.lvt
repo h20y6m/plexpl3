@@ -1,0 +1,56 @@
+%
+% Copyright (c) 2022 Japanese TeX Development Community
+%
+\epTeXinputencoding utf8
+
+\input{regression-test}
+\documentclass{minimal}
+\RequirePackage[enable-debug]{expl3}
+\ExplSyntaxOn
+\debug_on:n { check-declarations , deprecation , log-functions }
+\ExplSyntaxOff
+
+\RequirePackage{plexpl3}
+
+\begin{document}
+
+\START
+\ExplSyntaxOn
+
+\TEST { regex_match }
+  {
+    \regex_match:nnTF { ± } { ±ñıűƱǱȱɱ }
+      { \TRUE } { \FALSE }
+    \regex_match:nnTF { ± } { ñıűƱǱȱɱ }
+      { \TRUE } { \FALSE }
+  }
+
+\TEST { regex_count }
+  {
+    \regex_count:nnN { ± } { ±ñıűƱǱȱɱ } \l_tmpa_int
+    \TYPE { \int_use:N \l_tmpa_int }
+    \regex_count:nnN { ± } { ñıűƱǱȱɱ } \l_tmpa_int
+    \TYPE { \int_use:N \l_tmpa_int }
+  }
+
+\TEST { regex_replace_once }
+  {
+    \tl_set:Nn \l_tmpa_tl { ±ñıűƱǱȱɱ }
+    \regex_replace_once:nnN { ± } { * } \l_tmpa_tl
+    \TYPE { \tl_use:N \l_tmpa_tl }
+    \tl_set:Nn \l_tmpa_tl { ñıűƱǱȱɱ }
+    \regex_replace_once:nnN { ± } { * } \l_tmpa_tl
+    \TYPE { \tl_use:N \l_tmpa_tl }
+  }
+
+\TEST { regex_replace_all }
+  {
+    \tl_set:Nn \l_tmpa_tl { ±ñıűƱǱȱɱ }
+    \regex_replace_all:nnN { ± } { * } \l_tmpa_tl
+    \TYPE { \tl_use:N \l_tmpa_tl }
+    \tl_set:Nn \l_tmpa_tl { ñıűƱǱȱɱ }
+    \regex_replace_all:nnN { ± } { * } \l_tmpa_tl
+    \TYPE { \tl_use:N \l_tmpa_tl }
+  }
+
+\END
