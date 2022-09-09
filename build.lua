@@ -3,18 +3,29 @@ bundle = ""
 
 maindir = "."
 
-checkengines = {"ptex","uptex"}
-stdengine    = "ptex"
+os.setenv("guess_input_kanji_encoding", "0")
+
+checkengines = {"ptex-euc","ptex-sjis","uptex","uptex-euc","uptex-sjis"}
+stdengine    = "ptex-euc"
 checkformat  = "latex"
-checkopts    = " -interaction=nonstopmode -no-guess-input-enc -kanji=utf8 "
+checkopts    = " -interaction=nonstopmode -halt-on-error -kanji=utf8 "
+
+specialformats = specialformats or {}
+specialformats.latex = {
+  ["ptex-euc"]   = { binary = "eptex",  format = "platex-euc",   options = "-kanji-internal=euc",  ini = "platex.ini"  },
+  ["ptex-sjis"]  = { binary = "eptex",  format = "platex-sjis",  options = "-kanji-internal=sjis", ini = "platex.ini"  },
+  ["uptex"]      = { binary = "euptex", format = "uplatex",      options = "",                     ini = "uplatex.ini" },
+  ["uptex-euc"]  = { binary = "euptex", format = "uplatex-euc",  options = "-kanji-internal=euc",  ini = "platex.ini"  },
+  ["uptex-sjis"] = { binary = "euptex", format = "uplatex-sjis", options = "-kanji-internal=sjis", ini = "platex.ini"  },
+}
 
 installfiles = {"plexpl3.ltx","plexpl3.sty"}
 
 typesetexe  = "platex"
-typesetopts = " -interaction=nonstopmode -no-guess-input-enc -kanji=utf8 "
+typesetopts = " -interaction=nonstopmode -halt-on-error -kanji=utf8 "
 
 unpackexe  = "ptex"
-unpackopts = " -interaction=batchmode -no-guess-input-enc -kanji=utf8 "
+unpackopts = " -interaction=batchmode -halt-on-error -kanji=utf8 "
 
 -- Do not break non-ascii chars in log file
 asciiengines = {}
@@ -47,15 +58,30 @@ end
 
 local function mkfmts(engines,dir)
   for _,engine in pairs(engines) do
-    engine = string.gsub(engine,"latex$","tex")
-    local ininame = string.gsub(engine,"tex$","latex.ini")
-    if engine:match("u?ptex") then
-      engine = "e" .. engine
+    local binary = string.gsub(engine,"latex$","tex")
+    local format = string.gsub(binary,"tex$","latex")
+    local options = ""
+    local ini = format .. ".ini"
+    if binary:match("u?ptex") then
+      binary = "e" .. binary
+    end
+    local special_check = specialformats[checkformat]
+    if special_check and next(special_check) then
+      engine_info = special_check[engine]
+      if engine_info then
+        binary = engine_info.binary or binary
+        format = engine_info.format or format
+        options = engine_info.options or options
+        ini = engine_info.ini or ini
+      end
     end
     print("Building format for " .. engine)
-    local errorlevel = runcmd(engine .. " -etex -ini "
-      .. " -no-guess-input-enc -kanji=utf8 "
-      .. ininame .. " > " .. os_null, dir, {})
+    local errorlevel = runcmd(
+      binary .. " -etex -ini"
+      .. " -jobname=" .. format
+      .. " " .. options .. " -halt-on-error -kanji=utf8"
+      .. " " .. ini .. " > " .. os_null,
+      dir, {})
     if errorlevel ~= 0 then
       print("Failed building format for " .. engine)
       return errorlevel
