@@ -12,11 +12,36 @@ checkopts    = " -interaction=nonstopmode -halt-on-error -kanji=utf8 "
 
 specialformats = specialformats or {}
 specialformats.latex = {
-  ["ptex-euc"]   = { binary = "eptex",  format = "platex-euc",   options = "-kanji-internal=euc",  ini = "platex.ini"  },
-  ["ptex-sjis"]  = { binary = "eptex",  format = "platex-sjis",  options = "-kanji-internal=sjis", ini = "platex.ini"  },
-  ["uptex"]      = { binary = "euptex", format = "uplatex",      options = "",                     ini = "uplatex.ini" },
-  ["uptex-euc"]  = { binary = "euptex", format = "uplatex-euc",  options = "-kanji-internal=euc",  ini = "platex.ini"  },
-  ["uptex-sjis"] = { binary = "euptex", format = "uplatex-sjis", options = "-kanji-internal=sjis", ini = "platex.ini"  },
+  ["ptex-euc"] = {
+    binary  = "eptex",
+    format  = "platex-euc",
+    options = " -kanji-internal=euc " .. checkopts,
+    ini     = "platex.ini",
+  },
+  ["ptex-sjis"] = {
+    binary  = "eptex",
+    format  = "platex-sjis",
+    options = " -kanji-internal=sjis " .. checkopts,
+    ini     = "platex.ini",
+  },
+  ["uptex"] = {
+    binary  = "euptex",
+    format  = "uplatex",
+    options = " -kanji-internal=uptex " .. checkopts,
+    ini     = "uplatex.ini",
+  },
+  ["uptex-euc"] = {
+    binary  = "euptex",
+    format  = "uplatex-euc",
+    options = " -kanji-internal=euc " .. checkopts,
+    ini     = "platex.ini",
+  },
+  ["uptex-sjis"] = {
+    binary  = "euptex",
+    format  = "uplatex-sjis",
+    options = " -kanji-internal=sjis " .. checkopts,
+    ini     = "platex.ini",
+  },
 }
 
 installfiles = {"plexpl3.ltx","plexpl3.sty"}
@@ -76,12 +101,15 @@ local function mkfmts(engines,dir)
       end
     end
     print("Building format for " .. engine)
-    local errorlevel = runcmd(
+    local errorlevel = run(
+      dir,
+      os_setenv .. " TEXINPUTS=." .. localtexmf() .. os_pathsep
+        .. os_concat ..
       binary .. " -etex -ini"
-      .. " -jobname=" .. format
-      .. " " .. options .. " -halt-on-error -kanji=utf8"
-      .. " " .. ini .. " > " .. os_null,
-      dir, {})
+        .. " -jobname=" .. format
+        .. " " .. options .. " -halt-on-error -kanji=utf8"
+        .. " " .. ini .. " > " .. os_null
+    )
     if errorlevel ~= 0 then
       print("Failed building format for " .. engine)
       return errorlevel
