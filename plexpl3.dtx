@@ -307,6 +307,44 @@
   }
 %    \end{macrocode}
 %
+% \subsubsection{Fix for the case-change funcrtions}
+%
+% Do not change case of jachar.
+%    \begin{macrocode}
+\bool_lazy_or:nnT
+  { \sys_if_engine_ptex_p: }
+  { \sys_if_engine_uptex_p: }
+  {
+    \cs_new_eq:NN \@@_change_case_codepoint_lower_non_jachar:nnn
+      \@@_change_case_codepoint_lower:nnn
+    \cs_new_eq:NN \@@_change_case_codepoint_upper_non_jachar:nnn
+      \@@_change_case_codepoint_upper:nnn
+    \cs_new_eq:NN \@@_change_case_codepoint_title_non_jachar:nnn
+      \@@_change_case_codepoint_title:nnn
+    \cs_new_eq:NN \@@_change_case_codepoint_titleonly_non_jachar:nnn
+      \@@_change_case_codepoint_titleonly:nnn
+    \cs_gset:Npn \@@_change_case_codepoint_lower:nnn #1#2#3
+      { \@@_change_case_codepoint_jachar:nnnn {#1} {#1} {#2} {#3} }
+    \cs_gset:Npn \@@_change_case_codepoint_upper:nnn #1#2#3
+      { \@@_change_case_codepoint_jachar:nnnn {#1} {#1} {#2} {#3} }
+    \cs_gset:Npn \@@_change_case_codepoint_title:nnn #1#2#3
+      { \@@_change_case_codepoint_jachar:nnnn {#1} { lower } {#2} {#3} }
+    \cs_gset:Npn \@@_change_case_codepoint_titleonly:nnn #1#2#3
+      { \@@_change_case_codepoint_jachar:nnnn {#1} { end } {#2} {#3} }
+    \cs_new:Npn \@@_change_case_codepoint_jachar:nnnn #1#2#3#4
+      {
+        \bool_lazy_and:nnTF
+          { \tl_if_single_p:n {#4} }
+          { \token_if_jachar_p:N #4 }
+          {
+            \@@_change_case_store:n {#4}
+            \use:c { @@_change_case_next_ #2 :nn } {#2} {#3}
+          }
+          { \use:c { @@_change_case_codepoint_ #1 _non_jachar:nnn } {#1} {#3} {#4} }
+      }
+  }
+%    \end{macrocode}
+%
 %    \begin{macrocode}
 %<@@=>
 %    \end{macrocode}
