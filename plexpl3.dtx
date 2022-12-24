@@ -118,7 +118,9 @@
 %
 % \section{expl3の和文文字トークン対応}
 %
-% \subsection{大文字小文字変換関数の修正}
+% \subsection{Additional functions for jachar support}
+%
+% \subsubsection{Tests jachar token}
 % \url{https://gist.github.com/zr-tex8r/248ff347172ce16d005897656687a901}
 %
 % \begin{macro}{\token_if_jachar:NTF}
@@ -164,111 +166,149 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% Fix for the case-change funcrtions in \file{l3text}.
+% \subsection{Fix for l3str}
 %
+% \subsubsection{Fix for the case-change funcrtions}
+%
+%    \begin{macrocode}
+%<@@=str>
+%    \end{macrocode}
+%
+% Handle jachar in \pTeX{} and \upTeX{}.
 %    \begin{macrocode}
 \bool_lazy_or:nnT
   { \sys_if_engine_ptex_p: }
   { \sys_if_engine_uptex_p: }
   {
-    \cs_gset_eq:NN \__text_change_case_char_jachar:nnnN
-      \__text_change_case_char_auxii:nnnN
-  }
-\bool_lazy_or:nnF
-  { \sys_if_engine_luatex_p: }
-  { \sys_if_engine_xetex_p: }
-  {
-%    \end{macrocode}
-% The current implementation for pdftex should be employed
-% for all non-Unicode engines.
-%    \begin{macrocode}
-    \cs_gset:Npn \__text_change_case_char_auxii:nnnN #1#2#3#4
+    \cs_new_eq:NN \@@_change_case_codepoint_non_jachar:nN
+      \@@_change_case_codepoint:nN
+    \cs_gset:Npn \@@_change_case_codepoint:nN #1#2
       {
-        \int_compare:nNnTF { `#4 } < { "F0 }
-          { \__text_change_case_char_UTFviii:nnnNNN }
-          { \__text_change_case_char_UTFviii:nnnNNNN }
-            {#1} {#2} {#3} #4
+        \token_if_jachar:NTF #2
+          { \@@_change_case_codepoint_jachar:nN }
+          { \@@_change_case_codepoint_non_jachar:nN }
+            {#1} #2
+      }
+    \cs_new:Npn \@@_change_case_codepoint_jachar:nN #1#2
+      {
+        \@@_change_case_output:nw {#2}
+        \@@_change_case_loop:nw {#1}
       }
   }
-\bool_lazy_or:nnT
-  { \sys_if_engine_ptex_p: }
-  { \sys_if_engine_uptex_p: }
-  {
-    \cs_gset:Npn \__text_change_case_char:nnnN #1#2#3#4
-      {
-        \int_compare:nNnTF { `#4 } > { "80 } % why not "7F?
-          {
-%    \end{macrocode}
-% Check if the given character token is a jachar.
-%    \begin{macrocode}
-            \token_if_jachar:NTF #4
-              { \__text_change_case_char_jachar:nnnN }
-              {
-                \int_compare:nNnTF { `#4 } < { "E0 }
-                  { \__text_change_case_char_UTFviii:nnnNN }
-                  { \__text_change_case_char_auxii:nnnN }
-              }
-          }
-          { \__text_change_case_char_auxi:nnnN }
-            {#1} {#2} {#3} #4
-       }
-  }
 %    \end{macrocode}
 %
-% Fix for the case-change funcrtions in \file{l3str}.
+% \subsection{Fix for l3text}
 %
 %    \begin{macrocode}
-\bool_lazy_or:nnF
-  { \sys_if_engine_luatex_p: }
-  { \sys_if_engine_xetex_p: }
-  {
+%<@@=text>
 %    \end{macrocode}
-% The current implementation for pdftex should be employed
-% for all non-Unicode engines.
+%
+% \subsubsection{Fix for the codepoints funcrtions}
+%
+% Reverts the \pTeX{} implementation to the same as \pdfTeX{}.
 %    \begin{macrocode}
-    \cs_gset:Npn \__str_change_case_char_UTFviii:nNNN #1#2#3#4
-      { \__str_change_case_char_UTFviii:nn {#1} {#2#3#4} }
-    \cs_gset:Npn \__str_change_case_char_UTFviii:nNNNN #1#2#3#4#5
-      { \__str_change_case_char_UTFviii:nn {#1} {#2#3#4#5} }
-  }
-\bool_lazy_or:nnT
-  { \sys_if_engine_ptex_p: }
-  { \sys_if_engine_uptex_p: }
+\sys_if_engine_ptex:T
   {
-    \cs_gset:Npn \__str_change_case_char:nN #1#2
+    \cs_gset:Npn \@@_codepoint_process:nN #1#2
       {
-        \__str_if_recursion_tail_stop_do:Nn #2
-          { \__str_change_case_end:wn }
         \int_compare:nNnTF { `#2 } > { "80 }
           {
-%    \end{macrocode}
-% Check if the given character token is a jachar.
-%    \begin{macrocode}
-            \token_if_jachar:NTF #2
-              { \__str_change_case_char_jachar:nN }
+            \int_compare:nNnTF { `#2 } < { "E0 }
+              { \@@_codepoint_process:nNN }
               {
-                \int_compare:nNnTF { `#2 } < { "E0 }
-                  { \__str_change_case_char_UTFviii:nNN }
-                  {
-                    \int_compare:nNnTF { `#2 } < { "F0 }
-                      { \__str_change_case_char_UTFviii:nNNN }
-                      { \__str_change_case_char_UTFviii:nNNNN }
-                  }
+                 \int_compare:nNnTF { `#2 } < { "F0 }
+                   { \@@_codepoint_process:nNNN }
+                   { \@@_codepoint_process:nNNNN }
               }
+          }
+          { \use:n }
             {#1} #2
-          }
-          {
-            \__str_change_case_output:fw
-              { \use:c { char_str_ #1 case:N } #2 }
-            \__str_change_case_loop:nw {#1}
-          }
       }
-    \cs_new:Npn \__str_change_case_char_jachar:nN #1#2
+    \cs_new:Npn \@@_codepoint_process:nNNN #1#2#3#4
+      { #1 {#2#3#4} }
+    \cs_new:Npn \@@_codepoint_process:nNNNN #1#2#3#4#5
+      { #1 {#2#3#4#5} }
+  }
+%    \end{macrocode}
+% Handle jachar in \pTeX{} and \upTeX{}.
+%    \begin{macrocode}
+\bool_lazy_or:nnT
+  { \sys_if_engine_ptex_p: }
+  { \sys_if_engine_uptex_p: }
+  {
+    \cs_new_eq:NN \@@_codepoint_process_non_jachar:nN
+      \@@_codepoint_process:nN
+    \cs_gset:Npn \@@_codepoint_process:nN #1#2
       {
-        \__str_change_case_output:nw {#2}
-        \__str_change_case_loop:nw {#1}
+        \token_if_jachar:NTF #2
+          { \@@_codepoint_process_jachar:nN }
+          { \@@_codepoint_process_non_jachar:nN }
+            {#1} #2
+      }
+    \cs_new:Npn \@@_codepoint_process_jachar:nN #1#2
+      { #1 {#2} }
+  }
+%    \end{macrocode}
+%
+% Reverts the \pTeX{} implementation to the same as \pdfTeX{}.
+%    \begin{macrocode}
+\sys_if_engine_ptex:T
+  {
+    \cs_gset:Npn \@@_codepoint_from_chars:Nw #1
+      {
+        \if_int_compare:w `#1 > "80 \exp_stop_f:
+          \if_int_compare:w `#1 < "E0 \exp_stop_f:
+            \exp_after:wN \exp_after:wN \exp_after:wN
+              \@@_codepoint_from_chars:NN
+          \else:
+            \if_int_compare:w `#1 < "F0 \exp_stop_f:
+              \exp_after:wN \exp_after:wN \exp_after:wN
+              \exp_after:wN \exp_after:wN \exp_after:wN
+              \exp_after:wN \@@_codepoint_from_chars:NNN
+            \else:
+              \exp_after:wN \exp_after:wN \exp_after:wN
+              \exp_after:wN \exp_after:wN \exp_after:wN
+              \exp_after:wN \@@_codepoint_from_chars:NNNN
+            \fi:
+          \fi:
+        \else:
+          \exp_after:wN \@@_codepoint_from_chars:N
+        \fi:
+          #1
+      }
+    \cs_new:Npn \@@_codepoint_from_chars:NNN #1#2#3
+      { (`#1 - "E0) * "1000 + (`#2 - "80) * "40 + `#3 - "80 }
+    \cs_new:Npn \@@_codepoint_from_chars:NNNN #1#2#3#4
+      {
+          (`#1 - "F0) * "40000 
+        + (`#2 - "80) * "1000
+        + (`#3 - "80) * "40
+        + `#4 - "80
       }
   }
+%    \end{macrocode}
+% Handle jachar in \pTeX{} and \upTeX{}.
+%    \begin{macrocode}
+\bool_lazy_or:nnT
+  { \sys_if_engine_ptex_p: }
+  { \sys_if_engine_uptex_p: }
+  {
+    \cs_new_eq:NN \@@_codepoint_from_chars_non_jachar:Nw
+      \@@_codepoint_from_chars:Nw
+    \cs_gset:Npn \@@_codepoint_from_chars:Nw #1
+      {
+        \token_if_jachar:NTF #1
+          { \@@_codepoint_from_chars_jachar:N }
+          { \@@_codepoint_from_chars_non_jachar:Nw }
+            #1
+      }
+    \cs_new:Npn \@@_codepoint_from_chars_jachar:N #1
+      { \tex_toucs:D `#1 ~ }
+  }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%<@@=>
 %    \end{macrocode}
 %
 % \subsection{文字コード変換関数の修正}
