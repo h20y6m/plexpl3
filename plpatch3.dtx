@@ -626,8 +626,45 @@
   }
 %    \end{macrocode}
 %
+%
+% \subsection{Fix for l3tl-analysis}
+%
 %    \begin{macrocode}
-%<@@=>
+%<@@=tl>
+%    \end{macrocode}
+%
+% \subsubsection{Fix for the analysis funcrtions}
+%
+% FIXME: In the case of jachar tokens, I would like to return the kcatcode
+% (decimal 16--19, hexadecimal 10--13) instead of the catcode, but expl3
+% expects the catcode to be one hexadecimal digit, so we return 0 instead.
+%    \begin{macrocode}
+\cs_gset:Npx \@@_analysis_b_char:Nn #1#2
+  {
+    \exp_not:N \token_if_jachar:NTF #2
+      { 0 }
+      {
+        \exp_not:N \if_meaning:w #2 \exp_not:N \tex_undefined:D
+          \token_to_str:N D \exp_not:N \else:
+        \exp_not:N \if_catcode:w #2 \c_catcode_other_token
+          \token_to_str:N C \exp_not:N \else:
+        \exp_not:N \if_catcode:w #2 \c_catcode_letter_token
+          \token_to_str:N B \exp_not:N \else:
+        \exp_not:N \if_catcode:w #2 \c_math_toggle_token      3
+          \exp_not:N \else:
+        \exp_not:N \if_catcode:w #2 \c_alignment_token        4
+          \exp_not:N \else:
+        \exp_not:N \if_catcode:w #2 \c_math_superscript_token 7
+          \exp_not:N \else:
+        \exp_not:N \if_catcode:w #2 \c_math_subscript_token   8
+          \exp_not:N \else:
+        \exp_not:N \if_catcode:w #2 \c_space_token
+          \token_to_str:N A \exp_not:N \else:
+          6
+        \exp_not:n { \fi: \fi: \fi: \fi: \fi: \fi: \fi: \fi: }
+      }
+    #1 {#2}
+  }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
