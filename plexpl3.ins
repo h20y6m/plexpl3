@@ -10,7 +10,7 @@ This file is part of the pLaTeX2e system (community edition).
 \fi
 
 \let\jobname\relax
-\input docstrip %
+\input l3docstrip %
 \askforoverwritefalse
 
 \preamble
@@ -27,7 +27,15 @@ This file is part of the pLaTeX2e system (community edition).
 
 \keepsilent
 
-\generate{\file{plexpl3.sty}{\from{plexpl3.dtx}{package}}}
-\generate{\file{plexpl3.ltx}{\from{plexpl3.dtx}{code}}}
+\generate
+  {
+    \file{plexpl3.ltx}
+      {
+        \from{plexpl3.dtx} {code}
+        \from{plpatch3.dtx}{package}
+      }
+  }
+
+\generate{\file{plexpl3.sty}     {\from{plexpl3.dtx}     {package}}}
 
 \endbatchfile
