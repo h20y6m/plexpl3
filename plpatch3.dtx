@@ -28,7 +28,7 @@
 %    }^^A
 % }
 %
-% \date{Released 2023-02-11}
+% \date{Released 2023-02-18}
 %
 % \maketitle
 %
@@ -41,6 +41,15 @@
 %
 %    \begin{macrocode}
 %<*package>
+\NeedsTeXFormat{pLaTeX2e}
+\RequirePackage{expl3}
+\ProvidesExplPackage{plpatch3}{2023-02-18}{1.0}
+  {pTeX/upTeX-specific patches to expl3}
+%</package>
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%<*code|package>
 %    \end{macrocode}
 %
 %
@@ -668,7 +677,7 @@
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-%</package>
+%</code|package>
 %    \end{macrocode}
 %
 % \end{implementation}

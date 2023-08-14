@@ -44,7 +44,7 @@ specialformats.latex = {
   },
 }
 
-installfiles = {"plexpl3.ltx","plexpl3.sty"}
+installfiles = {"plexpl3.ltx","plexpl3.sty","plpatch3.sty"}
 
 typesetexe  = "platex"
 typesetopts = " -interaction=nonstopmode -halt-on-error -kanji=utf8 "
