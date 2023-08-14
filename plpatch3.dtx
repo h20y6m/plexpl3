@@ -28,11 +28,14 @@
 %    }^^A
 % }
 %
-% \date{Released 2023-02-18}
+% \date{Released 2023-08-11}
 %
 % \maketitle
 %
 % \begin{documentation}
+%
+% 
+%
 % \end{documentation}
 %
 % \begin{implementation}
@@ -495,86 +498,32 @@
 %
 % \subsubsection{Fix for the codepoints funcrtions}
 %
-% Reverts the \pTeX{} implementation to the same as \pdfTeX{}.
-%    \begin{macrocode}
-\sys_if_engine_ptex:T
-  {
-    \cs_gset:Npn \@@_codepoint_process:nN #1#2
-      {
-        \int_compare:nNnTF { `#2 } > { "80 }
-          {
-            \int_compare:nNnTF { `#2 } < { "E0 }
-              { \@@_codepoint_process:nNN }
-              {
-                 \int_compare:nNnTF { `#2 } < { "F0 }
-                   { \@@_codepoint_process:nNNN }
-                   { \@@_codepoint_process:nNNNN }
-              }
-          }
-          { \use:n }
-            {#1} #2
-      }
-    \cs_new:Npn \@@_codepoint_process:nNNN #1#2#3#4
-      { #1 {#2#3#4} }
-    \cs_new:Npn \@@_codepoint_process:nNNNN #1#2#3#4#5
-      { #1 {#2#3#4#5} }
-  }
-%    \end{macrocode}
 % Handle jachar in \pTeX{} and \upTeX{}.
 %    \begin{macrocode}
 \bool_lazy_or:nnT
   { \sys_if_engine_ptex_p: }
   { \sys_if_engine_uptex_p: }
   {
-    \cs_new_eq:NN \@@_codepoint_process_non_jachar:nN
-      \@@_codepoint_process:nN
     \cs_gset:Npn \@@_codepoint_process:nN #1#2
       {
-        \token_if_jachar:NTF #2
-          { \@@_codepoint_process_jachar:nN }
-          { \@@_codepoint_process_non_jachar:nN }
+        \int_compare:nNnTF {`#2} > { "7F }
+          {
+            \token_if_jachar:NTF #2
+              { \use:n }
+              { \@@_codepoint_process_aux:nN }
+          }
+          { \use:n }
             {#1} #2
       }
-    \cs_new:Npn \@@_codepoint_process_jachar:nN #1#2
-      { #1 {#2} }
   }
 %    \end{macrocode}
 %
 % Reverts the \pTeX{} implementation to the same as \pdfTeX{}.
 %    \begin{macrocode}
-\sys_if_engine_ptex:T
+\bool_lazy_or:nnT
+  { \sys_if_engine_ptex_p: }
+  { \sys_if_engine_uptex_p: }
   {
-    \cs_gset:Npn \@@_codepoint_from_chars:Nw #1
-      {
-        \if_int_compare:w `#1 > "80 \exp_stop_f:
-          \if_int_compare:w `#1 < "E0 \exp_stop_f:
-            \exp_after:wN \exp_after:wN \exp_after:wN
-              \@@_codepoint_from_chars:NN
-          \else:
-            \if_int_compare:w `#1 < "F0 \exp_stop_f:
-              \exp_after:wN \exp_after:wN \exp_after:wN
-              \exp_after:wN \exp_after:wN \exp_after:wN
-              \exp_after:wN \@@_codepoint_from_chars:NNN
-            \else:
-              \exp_after:wN \exp_after:wN \exp_after:wN
-              \exp_after:wN \exp_after:wN \exp_after:wN
-              \exp_after:wN \@@_codepoint_from_chars:NNNN
-            \fi:
-          \fi:
-        \else:
-          \exp_after:wN \@@_codepoint_from_chars:N
-        \fi:
-          #1
-      }
-    \cs_new:Npn \@@_codepoint_from_chars:NNN #1#2#3
-      { (`#1 - "E0) * "1000 + (`#2 - "80) * "40 + `#3 - "80 }
-    \cs_new:Npn \@@_codepoint_from_chars:NNNN #1#2#3#4
-      {
-          (`#1 - "F0) * "40000 
-        + (`#2 - "80) * "1000
-        + (`#3 - "80) * "40
-        + `#4 - "80
-      }
   }
 %    \end{macrocode}
 % Handle jachar in \pTeX{} and \upTeX{}.
@@ -583,14 +532,22 @@
   { \sys_if_engine_ptex_p: }
   { \sys_if_engine_uptex_p: }
   {
-    \cs_new_eq:NN \@@_codepoint_from_chars_non_jachar:Nw
-      \@@_codepoint_from_chars:Nw
     \cs_gset:Npn \@@_codepoint_from_chars:Nw #1
       {
-        \token_if_jachar:NTF #1
-          { \@@_codepoint_from_chars_jachar:N }
-          { \@@_codepoint_from_chars_non_jachar:Nw }
-            #1
+        \if_int_compare:w `#1 > "7F \exp_stop_f:
+          \token_if_jachar:NTF #1
+            {
+              \exp_after:wN
+              \@@_codepoint_from_chars:N
+            }
+            {
+              \exp_after:wN
+              \@@_codepoint_from_chars_aux:Nw
+            }
+        \else:
+          \exp_after:wN \@@_codepoint_from_chars:N
+        \fi:
+          #1
       }
     \cs_new:Npn \@@_codepoint_from_chars_jachar:N #1
       { \tex_toucs:D `#1 ~ }

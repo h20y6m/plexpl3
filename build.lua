@@ -4,6 +4,7 @@ bundle = ""
 maindir = "."
 
 os.setenv("guess_input_kanji_encoding", "0")
+os.setenv("PTEX_KANJI_ENC", "utf8")
 
 checkengines = {"ptex-euc","ptex-sjis","uptex","uptex-euc","uptex-sjis"}
 stdengine    = "ptex-euc"
@@ -48,6 +49,8 @@ installfiles = {"plexpl3.ltx","plexpl3.sty","plpatch3.sty"}
 
 typesetexe  = "platex"
 typesetopts = " -interaction=nonstopmode -halt-on-error -kanji=utf8 "
+
+maxprintline = 9999
 
 unpackexe  = "ptex"
 unpackopts = " -interaction=batchmode -halt-on-error -kanji=utf8 "
